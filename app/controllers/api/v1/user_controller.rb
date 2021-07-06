@@ -2,7 +2,6 @@ class Api::V1::UserController < ApplicationController
 
     def create
         token_uri = URI('https://accounts.spotify.com/api/token')
-        profile_uri = URI('https://api.spotify.com/v1/me')
 
         body = {
             code: params[:code],
@@ -16,11 +15,17 @@ class Api::V1::UserController < ApplicationController
 
         resp_params = JSON.parse(resp.body)
 
-        access_token = resp_params["access_token"]
+        render json: resp_params
+    end
+
+    def getUser(purrams)
+        profile_uri = URI('https://api.spotify.com/v1/me')
+        access_token = purrams["access_token"]
 
         user_params = HTTParty.get(profile_uri, headers: {
             "Authorization": "Bearer " + access_token
         })
+        
         user_profile = JSON.parse(user_params.body)
 
         @user = User.find_or_create_by(
@@ -31,14 +36,16 @@ class Api::V1::UserController < ApplicationController
         )
 
         profile_pic = user_profile["images"][0] ? user_profile["images"][0]["url"] : nil
-        
+
         @user.update(profile_picture: profile_pic)
         @user.update(access_token: resp_params["access_token"], refresh_token: resp_params["refresh_token"])
 
+        render json: {user: {
+            username: @user.username,
+            spotify_url: @user.spotify_url,
+            profile_picture: @user.profile_picture
+        }}
 
-        byebug
-
-        render json: resp
     end
 
    
