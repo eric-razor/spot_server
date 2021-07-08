@@ -5,6 +5,8 @@ Rails.application.routes.draw do
     namespace :v1 do 
       get '/login', to: 'login#create'
       post '/token', to: 'user#create'
+
+      get '/profile', to: 'user#show'
       
       
       resources :users
