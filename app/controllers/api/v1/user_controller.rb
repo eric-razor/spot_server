@@ -15,12 +15,16 @@ class Api::V1::UserController < ApplicationController
 
         resp_params = JSON.parse(resp.body)
 
+        session[:access_token] = resp_params["access_token"]
+
         render json: resp_params
     end
 
-    def getUser(purrams)
+    def show
         profile_uri = URI('https://api.spotify.com/v1/me')
-        access_token = purrams["access_token"]
+        access_token = session[:access_token]
+
+        byebug
 
         user_params = HTTParty.get(profile_uri, headers: {
             "Authorization": "Bearer " + access_token
@@ -45,8 +49,5 @@ class Api::V1::UserController < ApplicationController
             spotify_url: @user.spotify_url,
             profile_picture: @user.profile_picture
         }}
-
     end
-
-   
 end
