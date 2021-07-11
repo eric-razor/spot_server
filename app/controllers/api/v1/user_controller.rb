@@ -1,5 +1,8 @@
 class Api::V1::UserController < ApplicationController
 
+        skip_before_action :login_required
+
+
     def create
         token_uri = URI('https://accounts.spotify.com/api/token')
 
@@ -15,16 +18,16 @@ class Api::V1::UserController < ApplicationController
 
         resp_params = JSON.parse(resp.body)
 
-        session[:access_token] = resp_params["access_token"]
+        session["access_token"] = resp_params["access_token"]
+        session["refresh_token"] = resp_params["refresh_token"]
 
         render json: resp_params
     end
 
     def show
         profile_uri = URI('https://api.spotify.com/v1/me')
-        access_token = session[:access_token]
-
-        byebug
+        access_token = session["access_token"]
+        refresh_token = session["refresh_token"]
 
         user_params = HTTParty.get(profile_uri, headers: {
             "Authorization": "Bearer " + access_token
@@ -42,7 +45,8 @@ class Api::V1::UserController < ApplicationController
         profile_pic = user_profile["images"][0] ? user_profile["images"][0]["url"] : nil
 
         @user.update(profile_picture: profile_pic)
-        @user.update(access_token: resp_params["access_token"], refresh_token: resp_params["refresh_token"])
+        @user.update(access_token: access_token, refresh_token: refresh_token)
+
 
         render json: {user: {
             username: @user.username,
